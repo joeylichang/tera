@@ -1,22 +1,22 @@
-#单行事务设计
+# 单行事务设计
 Copyright 2016, Baidu, Inc.
 
-##背景
+## 背景
 * Tera的RowMutation接口提供了单行写入的原子语义，但对于read-modify-write操作没有原子性保证
 * Tera的原子操作接口（特别是对整型数据）覆盖了一些简单的read-modify-write需求，如AtomicAdd、AtomicAppend、PutIfAbsent等，但用户更复杂的、个性化的modify逻辑仍然需要将数据读到客户端有用户程序进行处理
 * 没有单行事务，通用的事务功能可能无从谈起，例如Google的触发式计算框架Percolator中实现的多行事务功能就是在Bigtable单行事务的基础上构建的
 
-##功能
+## 功能
 * 提供单行的read-modify-write原子语义
 * 两个事务修改同一行，但读操作所涉及到的CF或者Colum无任何交集时，两个事务不会冲突
 * 能够避免“幻影读”现象  
   *详见事务用户手册*
 
-##约束
+## 约束
 * 不支持多版本语义  
   *详见事务用户手册*
 
-##设计和实现
+## 设计和实现
 * read-modify-write原子性的保证  
   * 在事务过程中，SDK将记录所有读操作所涉及到的CF以及Column的范围（简称ReadRange），以及该范围内**所有数据及删除标记（PUT&DEL）**的最大时间戳（简称ReadMaxTS）
   * 在事务过程中，SDK将所有写操作的更新数据保存到本地内存中（简称WriteBuffer）
